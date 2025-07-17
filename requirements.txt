@@ -1,0 +1,11 @@
+numpy
+pandas
+xarray
+scipy
+matplotlib
+scikit-learn
+geopandas
+shapely
+pyyaml
+windrose
+pywake            # αν θες
