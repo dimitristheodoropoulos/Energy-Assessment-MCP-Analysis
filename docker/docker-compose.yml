@@ -1,0 +1,79 @@
+version: "3.7"
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=energy-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=wind-data
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=admintoken
+    networks:
+      - data_processing_network
+
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto:/mosquitto/config
+    networks:
+      - data_processing_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana:/var/lib/grafana
+    depends_on:
+      - influxdb
+    networks:
+      - data_processing_network
+
+  mqtt_publisher:
+    build:
+      context: ./mqtt-publisher
+      dockerfile: Dockerfile
+    container_name: mqtt_publisher
+    depends_on:
+      - mosquitto
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=wind/measurements
+    networks:
+      - data_processing_network
+
+  mqtt_to_influx:
+    build:
+      context: ../ # ΑΛΛΑΓΗ ΕΔΩ: Ορίζουμε το context στον ριζικό φάκελο του project (ένα επίπεδο πάνω)
+      dockerfile: ./docker/mqtt-to-influx/Dockerfile # ΑΛΛΑΓΗ ΕΔΩ: Η διαδρομή του Dockerfile τώρα είναι σχετική με το νέο context
+    container_name: mqtt_to_influx
+    depends_on:
+      - mosquitto
+      - influxdb
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=wind/measurements
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=admintoken
+      - INFLUXDB_ORG=energy-org
+      - INFLUXDB_BUCKET=wind-data
+    networks:
+      - data_processing_network
+
+networks:
+  data_processing_network:
+    driver: bridge
