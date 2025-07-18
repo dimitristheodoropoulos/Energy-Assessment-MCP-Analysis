@@ -25,26 +25,3 @@ docker/mosquitto/
 
 # Other project specific ignore
 project_structure.txt # Αν δεν θέλετε να το ανεβάσετε
-=======
-# Python
-__pycache__/
-*.pyc
-.Python
-venv/
-.ipynb_checkpoints/
-
-# Data & Generated Files
-*.csv
-*.txt
-*.json
-*.db
-mcp_scatter_plot.png # Αν δεν θέλετε να το ανεβάσετε, αλλιώς αφαιρέστε το
-
-# Docker/Grafana specific directories
-docker/grafana/png/
-docker/grafana/csv/
-docker/grafana/pdf/
-
-# Environment variables
-.env
->>>>>>> 42696ce (Initial commit: Implemented MCP analysis for wind energy assessment)
